@@ -1,0 +1,21 @@
+# Compiled source and libraries
+*.o
+*.a
+*.so
+*.dll
+*.exe
+*.obj
+*.lib
+*log
+*sdf
+
+vsbuild
+
+
+# emacs temp files
+*~
+
+# Compiled binaries and temporary library files
+x64
+
+

@@ -1,0 +1,4 @@
+// the configured options and settings for bundler processer
+#define HELLO_VERSION_MAJOR   @HELLO_VERSION_MAJOR@
+
+#cmakedefine USE_EXIF_READER  
