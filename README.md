@@ -9,3 +9,5 @@ by MeshLab(http://meshlabstuff.blogspot.com/)
 Also you can do some statistics about the 3D point cloud of your scene.
 
 CMakeLists.txt is provided so that it can be use both on Windows and Linux.
+
+dev branch
