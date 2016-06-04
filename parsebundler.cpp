@@ -163,10 +163,18 @@ bool PARSE_BUNDLER::ConvertPly( const std::string& ply_file ) const
     printf( "Error opening file %s for writing\n", ply_file.c_str() );
     return 0;
   }
+  /* save only 3d points with more than 2 feature points*/
+  int cnt = 0;
+  for ( const auto& point_info : mFeature_infos ){
+    if ( point_info.mView_list.size() > 2 ){
+      cnt += point_info.mView_list.size();
+    }
+  }
 
   /* Print the ply header */
-  fprintf( f, ply_header, mNumbPoints );
+  fprintf( f, ply_header, cnt );
   for ( const auto& point_info : mFeature_infos ){
+    if ( point_info.mView_list.size( ) > 2 )
     fprintf( f, "%0.6e %0.6e %0.6e %d %d %d\n",
       point_info.mPoint.x, point_info.mPoint.y, point_info.mPoint.z,
       point_info.mPoint.r, point_info.mPoint.g, point_info.mPoint.b );
@@ -344,8 +352,9 @@ void PARSE_BUNDLER::FindQueryPicture(const std::string& s)
 	}
 
 	mPic_query_mask.clear();
+  mPic_query_mask.reserve( 1000 );
 	string line;
-	while (is >> line)
+	while (getline(is, line))
 	{
 		//stringstream istrstream;
 		mPic_query_mask.push_back( line[0] == 'q' );
@@ -368,7 +377,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, bool bWritepoint ) 
   os << "# Bundle file v0.3" << endl;
 
   size_t num_cam = 0, num_pts = 0;
-  //count to number of cameras
+  //count to number of query cameras
   for ( size_t i = 0; i < mPic_query_mask.size(); i++ ){
     if ( 1 == mPic_query_mask[i] )
     {
@@ -448,6 +457,89 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, bool bWritepoint ) 
 
   os.close();
 }
+// find the query image true match, work for original bunde.out
+void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile ) const
+{
+  std::map<size_t, size_t> mapImgOrginToQuery;
+  // std::map<size_t, size_t> mapOrginToDB;
+  
+  // build the index from the original img index to the query img index
+  size_t cntImgQuery = 0;
+  for ( size_t cntImage = 0; cntImage < mNumCameras; cntImage++ )
+  {
+    if ( true == mPic_query_mask[cntImage] ){
+      mapImgOrginToQuery[cntImage] = cntImgQuery++;
+    }
+  }
+  std::cout << "num of query image: " << cntImgQuery << std::endl;
+
+  // find 3d points only see in query pictures
+  size_t cntPointsInDB = 0;
+  std::map<size_t, size_t> map3DPointsOrigToDB;
+  std::vector<std::vector<std::pair<size_t, size_t>>> vPairImgFeatTo3DPointMatch( cntImgQuery );
+  for ( size_t i = 0; i < mNumbPoints; i++ )
+  {
+    int cntPointHaveDBCams = 0;
+    // find if this point should be remained in db
+    for ( const auto& view : mFeature_infos[i].mView_list )
+    {
+      if ( false == mPic_query_mask[view.camera] ){
+        ++cntPointHaveDBCams;
+        if ( cntPointHaveDBCams >= 2 ) break;
+      }
+    }
+    
+    // build point index from original to db
+    if ( cntPointHaveDBCams >= 2 ){
+      map3DPointsOrigToDB[i] = cntPointsInDB;
+      size_t kCamQuery = 0;
+      // build the query match
+      for ( const auto& view : mFeature_infos[i].mView_list )
+      {
+        if ( true == mPic_query_mask[view.camera] ){
+          auto mapIterImg = mapImgOrginToQuery.find( view.camera );
+          if ( mapIterImg != mapImgOrginToQuery.end( ) && mapIterImg->first == view.camera ){
+            kCamQuery = mapIterImg->second;
+            vPairImgFeatTo3DPointMatch[kCamQuery].push_back( std::make_pair( view.key, cntPointsInDB ) );
+          }
+          else{
+            std::cout << "map find err" << std::endl;
+          }
+        }
+      }
+      cntPointsInDB++;
+    }
+  }
+  std::cout << "num of db points: " << cntPointsInDB << std::endl;
+
+  // then save the match information
+  std::ofstream os( sTrueMatchFile, std::ios::trunc );
+  if ( !os.is_open() ){
+    std::cout << "Open trueMatchFile fail: " << sTrueMatchFile << std::endl;
+    return;
+  }
+  
+  for ( size_t kImgQuery = 0; kImgQuery < cntImgQuery; kImgQuery++ ){
+    auto & vImgFeatMatch = vPairImgFeatTo3DPointMatch[kImgQuery];
+    std::sort( vImgFeatMatch.begin(), vImgFeatMatch.end() );
+    os << kImgQuery << " ";
+    for ( auto pFeat3D : vImgFeatMatch ){
+      os << pFeat3D.first << " " << pFeat3D.second << " ";
+    }
+    os << std::endl;
+  }
+
+  size_t kDBPoint = vPairImgFeatTo3DPointMatch[1][0].second;
+  for ( auto mapMember : map3DPointsOrigToDB ){
+    if ( mapMember.second == kDBPoint ){
+      std::cout << "original point index: " << mapMember.first << std::endl;
+      for ( auto &viewPoint : mFeature_infos[mapMember.first].mView_list ){
+        std::cout << viewPoint.camera << " " << viewPoint.key << std::endl;
+      }
+    }
+  }
+}
+
 
 void PARSE_BUNDLER::SetQueryMask(){
   mPic_query_mask.assign( mNumCameras, true );
@@ -490,8 +582,8 @@ bool PARSE_BUNDLER::SaveFeature3DInfo( const std::string&s, bool bSaveRGB, bool 
 		os  << feat_3d_info.mView_list.size() << " ";
 		//save view
 		for (auto& view : feat_3d_info.mView_list){
-			os << view.camera << " " << view.key << " " << view.x << " "
-				<< view.y << " " << view.scale << " " << view.orientation << " ";
+			os << view.camera << " " << view.key << " " << view.y << " "
+				<< view.x << " " << view.scale << " " << view.orientation << " ";
       if ( bSaveRGB ){
         //std::cout << (int)view.rgb[0] << " " << (int)view.rgb[1] << " " << (int)view.rgb[2] << std::endl;
         os << (int)view.rgb[0] << " " << (int)view.rgb[1] << " " << (int)view.rgb[2] <<" ";
@@ -545,7 +637,8 @@ bool PARSE_BUNDLER::LoadFeature3DInfo(const std::string&s)
 		//load view_list
 		mFeature_infos[i].mView_list.resize(view_list_len);
 		for (auto& view : mFeature_infos[i].mView_list){
-			is >> view.camera >> view.key >> view.x >> view.y 
+      // to be consistent with the bundler.out
+			is >> view.camera >> view.key >> view.y >> view.x 
 				>> view.scale >> view.orientation;
       if ( 1 == bSaveRGB ){
         is >> rgb[0] >> rgb[1] >> rgb[2];

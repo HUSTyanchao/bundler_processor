@@ -187,7 +187,7 @@ ALL_PICTURES::~ALL_PICTURES(){
 }
 
 //if there already exists pictures, clear them then reload
-bool ALL_PICTURES::LoadPicturesKeyFile(bool bLoaddesc)
+bool ALL_PICTURES::LoadPicturesKeyFile(bool bLoaddesc, bool bloadRGB)
 {
 	Timer timer;
 	timer.Start();
@@ -259,7 +259,8 @@ bool ALL_PICTURES::LoadPicturesKeyFile(bool bLoaddesc)
 		pic_keyfilename[i].replace(pic_keyfilename[i].end() - 3, pic_keyfilename[i].end(), "key");
 		//load a picture
     mPictures[i].LoadKeyPointAndDes( mKeyfilepath + "/" + pic_keyfilename[i], bLoaddesc );
-    mPictures[i].LoadKeyPointRGB( mKeyfilepath + "/" + pic_keyfilename[i] );
+    if ( bloadRGB )
+    { mPictures[i].LoadKeyPointRGB( mKeyfilepath + "/" + pic_keyfilename[i] ); }
   }
 
 	timer.Stop();
