@@ -20,7 +20,7 @@ enum eOperationMode
 
 // input parameters
 // data_path bundle_out_file picture_list  what_kind_of_process
-// for example, parsebundler E:/Dubrovnik6K /bundle/bundle.orig.out list.orig.txt 1
+// for example, bundler_processor E:/Dubrovnik6K /bundle/bundle.orig.out list.orig.txt 1
 // in the data_path E:/Dubrovnik6K, find the bundle.orig.out file in bundle folder 
 // and list.orig.txt, do FIND_QUERY_TRUE_MATCH process.
 
