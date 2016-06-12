@@ -9,6 +9,7 @@
 #include <sstream>
 #include <utility>
 #include <numeric>
+#include <algorithm>
 
 //using namespace std;
 using std::string;
@@ -519,25 +520,58 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
     return;
   }
   
+  // rank the match
+  size_t kMaximMatches = 0;
   for ( size_t kImgQuery = 0; kImgQuery < cntImgQuery; kImgQuery++ ){
     auto & vImgFeatMatch = vPairImgFeatTo3DPointMatch[kImgQuery];
     std::sort( vImgFeatMatch.begin(), vImgFeatMatch.end() );
-    os << kImgQuery << " ";
-    for ( auto pFeat3D : vImgFeatMatch ){
-      os << pFeat3D.first << " " << pFeat3D.second << " ";
-    }
-    os << std::endl;
+    kMaximMatches = std::max( kMaximMatches, vImgFeatMatch.size() );
   }
 
-  size_t kDBPoint = vPairImgFeatTo3DPointMatch[1][0].second;
-  for ( auto mapMember : map3DPointsOrigToDB ){
-    if ( mapMember.second == kDBPoint ){
-      std::cout << "original point index: " << mapMember.first << std::endl;
-      for ( auto &viewPoint : mFeature_infos[mapMember.first].mView_list ){
-        std::cout << viewPoint.camera << " " << viewPoint.key << std::endl;
-      }
+  // save the match 
+  size_t cntMatch= 0;
+  for ( size_t kImgQuery = 0; kImgQuery < cntImgQuery; kImgQuery++ )
+  {
+    auto & vImgFeatMatch = vPairImgFeatTo3DPointMatch[kImgQuery];
+   
+    // first line: img_id, feature_id1,...,feature_idn
+    cntMatch = 0;
+    os << kImgQuery << " ";
+    for ( auto& feat_match : vImgFeatMatch )
+    { 
+      os << feat_match.first << " ";
+      ++cntMatch;
     }
+    while ( cntMatch++ < kMaximMatches )
+    { 
+      os << -1 << " ";
+    }
+    os << std::endl;
+
+    // second line: num_match, point_id1,...,point_idn
+    cntMatch = 0;
+    os << vImgFeatMatch.size() << " ";
+    for ( auto& feat_match : vImgFeatMatch )
+    {
+      os << feat_match.second << " ";
+      ++cntMatch;
+    }
+    while ( cntMatch++ < kMaximMatches )
+    {
+      os << -1 << " ";
+    }
+    os << std::endl; 
   }
+  
+  //size_t kDBPoint = vPairImgFeatTo3DPointMatch[1][0].second;
+  //for ( auto mapMember : map3DPointsOrigToDB ){
+  //  if ( mapMember.second == kDBPoint ){
+  //    std::cout << "original point index: " << mapMember.first << std::endl;
+  //    for ( auto &viewPoint : mFeature_infos[mapMember.first].mView_list ){
+  //      std::cout << viewPoint.camera << " " << viewPoint.key << std::endl;
+  //    }
+  //  }
+  //}
 }
 
 

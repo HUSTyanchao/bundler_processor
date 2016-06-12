@@ -170,8 +170,7 @@ int main(int argc, char** argv)
     std::cout << "operation mode: FIND_QUERY_TRUE_MATCH" << std::endl;
     std::string strListTxt( data_path + "/" + pic_list );
     parse_bundller.FindQueryPicture( strListTxt );
-    parse_bundller.FindQueryFeatureTrueMatch( data_path + "/truematch.query" );
-
+    parse_bundller.FindQueryFeatureTrueMatch( data_path + "/match_true.txt" );
   }
   // color statistics
   else if ( eOperationmode == BUNDLE_STATISTICS ){
