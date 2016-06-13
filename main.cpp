@@ -11,12 +11,13 @@
 
 enum eOperationMode
 {
-  EXTRACT_BUNDLE_DB = 0,
-  BUNDLE_TO_PLY = 1,
-  FIND_QUERY_TRUE_MATCH = 2,
-  SCALE_3D_POINT_STAT = 3,
-  BUNDLE_STATISTICS = 4,
-  RESERVED = 5
+  EXTRACT_BUNDLE_DB     = 0,
+  EXTRACT_BUNDLE_QUERY  = 1,
+  BUNDLE_TO_PLY         = 2,
+  FIND_QUERY_TRUE_MATCH = 3,
+  SCALE_3D_POINT_STAT   = 4,
+  BUNDLE_STATISTICS     = 5,
+  RESERVED              = 6
 };
 
 // input parameters
@@ -84,7 +85,7 @@ int main(int argc, char** argv)
 #if 0
   // find image which should be adjusted.
   std::string imglist = "E:/Dubrovnik6K/list.db.txt";
-  std::ifstream is( imglist, std::ios::_Nocreate );
+  std::ifstream is( imglist, std::ios::in );
   if ( !is.is_open() ){
     std::cout << "open img list fail: " << imglist << std::endl;
   }
@@ -136,11 +137,12 @@ int main(int argc, char** argv)
     std::cout << "- process                                                 -" << std::endl;
     std::cout << "-     what kind of process do with bundle.out             -" << std::endl;
     std::cout << "- 0: extract bundle.db.out from bundle.orgi.out           -" << std::endl;
-    std::cout << "- 1: convert bundle.out to ply to be visualized           -" << std::endl;
-    std::cout << "- 2: find the true match for query feature                -" << std::endl;
-    std::cout << "- 3: do statics about scale of every 3d point             -" << std::endl;
-    std::cout << "- 4: do statics about the color of every 3d point         -" << std::endl;
-    std::cout << "- 5: ...                                                  -" << std::endl;
+    std::cout << "- 1: extract bundle.query.out from bundle.orgi.out        -" << std::endl;
+    std::cout << "- 2: convert bundle.out to ply to be visualized           -" << std::endl;
+    std::cout << "- 3: find the true match for query feature                -" << std::endl;
+    std::cout << "- 4: do statics about scale of every 3d point             -" << std::endl;
+    std::cout << "- 5: do statics about the color of every 3d point         -" << std::endl;
+    std::cout << "- 6: ...                                                  -" << std::endl;
     std::cout << "-                                                         -" << std::endl;
     std::cout << "___________________________________________________________" << std::endl;
     return 0;
@@ -160,10 +162,11 @@ int main(int argc, char** argv)
   switch ( *argv[4] )
   {
     case '0': eOperationmode = EXTRACT_BUNDLE_DB; break;
-    case '1': eOperationmode = BUNDLE_TO_PLY; break;
-    case '2': eOperationmode = FIND_QUERY_TRUE_MATCH; break;
-    case '3': eOperationmode = SCALE_3D_POINT_STAT; break;
-    case '4': eOperationmode = BUNDLE_STATISTICS; break;
+    case '1': eOperationmode = EXTRACT_BUNDLE_QUERY; break;
+    case '2': eOperationmode = BUNDLE_TO_PLY; break;
+    case '3': eOperationmode = FIND_QUERY_TRUE_MATCH; break;
+    case '4': eOperationmode = SCALE_3D_POINT_STAT; break;
+    case '5': eOperationmode = BUNDLE_STATISTICS; break;
     default : eOperationmode = RESERVED; break;
   }
 
@@ -177,8 +180,15 @@ int main(int argc, char** argv)
     parse_bundller.FindQueryPicture( strListTxt );
     parse_bundller.WriteDBBundler( bundle_out + ".mydb" );
   }
+  // extract bundle.query.out from bundle.orgi.out 
+  else if ( EXTRACT_BUNDLE_QUERY == eOperationmode ){ 
+    std::cout << "operation mode: EXTRACT_BUNDLE_QUERY" << std::endl;
+    std::string strListTxt( data_path + "/" + pic_list );
+    parse_bundller.FindQueryPicture( strListTxt );
+    parse_bundller.WriteQueryBundler( bundle_out + ".query.points_query_index" , 1);
+  }
   // convert the bundle file to ply so we can visualize the 3d point cloud with MeshLab 
-  else if ( eOperationmode == BUNDLE_TO_PLY ){
+  else if ( BUNDLE_TO_PLY == eOperationmode ){
     std::cout << "operation mode: BUNDLE_TO_PLY" << std::endl;
     parse_bundller.ConvertPly( ply_filename );
   }
@@ -190,9 +200,9 @@ int main(int argc, char** argv)
     parse_bundller.FindQueryFeatureTrueMatch( data_path + "/match_true.txt" );
   }
   // color statistics
-  else if ( eOperationmode == BUNDLE_STATISTICS ){
+  else if ( BUNDLE_STATISTICS == eOperationmode){
     std::cout << "operation mode: BUNDLE_STATISTICS" << std::endl;
-    std::ifstream is( bundle_out + ".rgb", std::ios::_Nocreate );
+    std::ifstream is( bundle_out + ".rgb", std::ios::in );
     if ( is.is_open() ){
       std::cout << "LoadFeature3DInfo " << std::endl;
       parse_bundller.LoadFeature3DInfo( bundle_out + ".rgb" );

@@ -5,7 +5,6 @@
 #include "timer.h"
 
 #ifdef HAS_BOOST
-
 using namespace boost;
 
 Timer::Timer():mElapsed_time(0){
@@ -57,7 +56,7 @@ void Timer::Stop( ){}
 void Timer::ReStart( ){}
 double Timer::GetElapsedTimeSecond( ){ return  0; }
 double Timer::GetElapsedTimeMilliSecond( ){ return 0; }
-std::string Timer::GetElapsedTimeAsString(){ return std::string( "no timer" ); }
+std::string Timer::GetElapsedTimeAsString(){ return std::string( "No timer!" ); }
 
 
 #endif // HAS_BOOST
