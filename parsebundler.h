@@ -196,6 +196,7 @@ public:
   void FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile ) const;
   void WriteQueryBundler( const std::string& s, bool bWritepoint = false) const;
 
+  void WriteDBBundler( const std::string& sBundleDB ) const;
 
   void SetQueryMask();
   void ResetQueryMask();

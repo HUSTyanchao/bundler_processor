@@ -11,11 +11,12 @@
 
 enum eOperationMode
 {
-  BUNDLE_TO_PLY = 0,
-  FIND_QUERY_TRUE_MATCH = 1,
-  SCALE_3D_POINT_STAT = 2,
-  BUNDLE_STATISTICS = 3,
-  RESERVED = 4
+  EXTRACT_BUNDLE_DB = 0,
+  BUNDLE_TO_PLY = 1,
+  FIND_QUERY_TRUE_MATCH = 2,
+  SCALE_3D_POINT_STAT = 3,
+  BUNDLE_STATISTICS = 4,
+  RESERVED = 5
 };
 
 // input parameters
@@ -79,6 +80,7 @@ int main(int argc, char** argv)
   //cv::waitKey();
   return 1;
 #endif
+
 #if 0
   // find image which should be adjusted.
   std::string imglist = "E:/Dubrovnik6K/list.db.txt";
@@ -133,11 +135,12 @@ int main(int argc, char** argv)
     std::cout << "-     picture_list_txt contain all pictures               -" << std::endl;
     std::cout << "- process                                                 -" << std::endl;
     std::cout << "-     what kind of process do with bundle.out             -" << std::endl;
-    std::cout << "- 0: convert bundle.out to ply to be visualized           -" << std::endl;
-    std::cout << "- 1: find the true match for query feature                -" << std::endl;
-    std::cout << "- 2: do statics about scale of every 3d point             -" << std::endl;
-    std::cout << "- 3: do statics about the color of every 3d point         -" << std::endl;
-    std::cout << "- 4: ...                                                  -" << std::endl;
+    std::cout << "- 0: extract bundle.db.out from bundle.orgi.out           -" << std::endl;
+    std::cout << "- 1: convert bundle.out to ply to be visualized           -" << std::endl;
+    std::cout << "- 2: find the true match for query feature                -" << std::endl;
+    std::cout << "- 3: do statics about scale of every 3d point             -" << std::endl;
+    std::cout << "- 4: do statics about the color of every 3d point         -" << std::endl;
+    std::cout << "- 5: ...                                                  -" << std::endl;
     std::cout << "-                                                         -" << std::endl;
     std::cout << "___________________________________________________________" << std::endl;
     return 0;
@@ -156,19 +159,26 @@ int main(int argc, char** argv)
   eOperationMode eOperationmode;
   switch ( *argv[4] )
   {
-    case '0': eOperationmode = BUNDLE_TO_PLY; break;
-    case '1': eOperationmode = FIND_QUERY_TRUE_MATCH; break;
-    case '2': eOperationmode = SCALE_3D_POINT_STAT; break;
-    case '3': eOperationmode = BUNDLE_STATISTICS; break;
+    case '0': eOperationmode = EXTRACT_BUNDLE_DB; break;
+    case '1': eOperationmode = BUNDLE_TO_PLY; break;
+    case '2': eOperationmode = FIND_QUERY_TRUE_MATCH; break;
+    case '3': eOperationmode = SCALE_3D_POINT_STAT; break;
+    case '4': eOperationmode = BUNDLE_STATISTICS; break;
     default : eOperationmode = RESERVED; break;
   }
 
   PARSE_BUNDLER parse_bundller;
   parse_bundller.ParseBundlerFile( bundle_out );
  
-
+  // extract bundle.db.out from bundle.orgi.out 
+  if ( EXTRACT_BUNDLE_DB == eOperationmode ){ 
+    std::cout << "operation mode: EXTRACT_BUNDLE_DB" << std::endl;
+    std::string strListTxt( data_path + "/" + pic_list );
+    parse_bundller.FindQueryPicture( strListTxt );
+    parse_bundller.WriteDBBundler( bundle_out + ".mydb" );
+  }
   // convert the bundle file to ply so we can visualize the 3d point cloud with MeshLab 
-  if ( eOperationmode == BUNDLE_TO_PLY ){
+  else if ( eOperationmode == BUNDLE_TO_PLY ){
     std::cout << "operation mode: BUNDLE_TO_PLY" << std::endl;
     parse_bundller.ConvertPly( ply_filename );
   }
