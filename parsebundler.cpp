@@ -393,8 +393,8 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
 
   for ( size_t i = 0; i < mNumbPoints; i++ )
   {
-    int cntPointHaveDBCams = 0;
-    int cntPointHaveQueryCames = 0;
+    size_t cntPointHaveDBCams = 0;
+    size_t cntPointHaveQueryCames = 0;
     // find if this point should be remained in db
     for ( const auto& view : mFeature_infos[i].mView_list )
     {
@@ -406,6 +406,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
       {
         ++cntPointHaveQueryCames;
       }
+
       if ( cntPointHaveDBCams >= 2 && cntPointHaveQueryCames >= 2) break;
     }
 
@@ -425,7 +426,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
   std::cout << "num of db points: " << cntPointsInDB << std::endl;
   std::cout << "num of query points: " << cntPointsInQuery << std::endl;
 
-  ofstream os( sBundleQuery, std::ios::out | std::ios::trunc );
+  std::ofstream os( sBundleQuery, std::ios::out | std::ios::trunc );
   if ( false == os.is_open() ){
     std::cout << " open query bundle file fail: " << sBundleQuery << endl;
     return;
@@ -546,6 +547,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
   {
     ofs << iter->first << " " << iter->second << std::endl;
   }
+  ofs.close();
 
 }
 
@@ -593,7 +595,7 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
 
   // then save the bundle.db file
   ofstream os( sBundleDB, std::ios::out | std::ios::trunc );
-  if ( 0 == os.is_open() ){
+  if ( false == os.is_open() ){
     std::cout << " open query bundle file fail: " << sBundleDB << endl;
     return;
   }
@@ -642,6 +644,7 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
           view_lenth_true++;
         }
       }
+
       os << std::resetiosflags( std::ios::fixed ) 
         << std::setiosflags( std::ios::scientific ) 
         << std::setprecision( 9 );
@@ -669,7 +672,7 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
               << mFeature_infos[i].mView_list[j].y << " ";
           }
           else{ 
-            std::cout << " save view list err. parse_bundler.cpp line 576" << std::endl;
+            std::cout << " save view list err. parse_bundler.cpp line 672" << std::endl;
             return;
           }
         }
@@ -679,6 +682,19 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
   }
 
   os.close();
+
+  /* save the 3d point index map */
+  // then save the match information
+  std::ofstream ofs( sBundleDB + ".points.map", std::ios::trunc );
+  if ( !ofs.is_open() ){
+    std::cout << "Open points.map fail: " << sBundleDB + ".points.map" << std::endl;
+    return;
+  }
+  for (auto iter = map3DPointsOrigToDB.cbegin(); iter != map3DPointsOrigToDB.cend(); ++iter )
+  {
+    ofs << iter->first << " " << iter->second << std::endl;
+  }
+  ofs.close();
 }
 
 
@@ -812,6 +828,7 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
   { 
     ofs << iter->first << " " << iter->second << std::endl;
   }
+  ofs.close();
 
 }
 
