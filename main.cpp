@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     std::cout << "operation mode: EXTRACT_BUNDLE_QUERY" << std::endl;
     std::string strListTxt( data_path + "/" + pic_list );
     parse_bundller.FindQueryPicture( strListTxt );
-    parse_bundller.WriteQueryBundler( bundle_out + ".query.points_query_index" , 1);
+    parse_bundller.WriteQueryBundler( bundle_out + ".query.DBPointIndex" , 1, true);
   }
   // convert the bundle file to ply so we can visualize the 3d point cloud with MeshLab 
   else if ( BUNDLE_TO_PLY == eOperationmode ){

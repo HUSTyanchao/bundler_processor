@@ -1,4 +1,3 @@
-
 #include "parsebundler.h"
 
 #include "opencv2/opencv.hpp"
@@ -58,12 +57,10 @@ void  PARSE_BUNDLER::ClearData(){
 <f> <k1> <k2>   [the focal length, followed by two radial distortion coeffs]
 <R>             [a 3x3 matrix representing the camera rotation]
 <t>             [a 3-vector describing the camera translation]
-
 Each point entry has the form
 <position>      [a 3-vector describing the 3D position of the point]
 <color>         [a 3-vector describing the RGB color of the point]
 <view list>     [a list of views the point is visible in]
-
 The view list begins with the length of the list 
 (i.e., the number of cameras the point is visible in).
 The list is then given as a list of quadruplets <camera> <key> <x> <y>
@@ -193,7 +190,6 @@ bool PARSE_BUNDLER::ConvertPly( const std::string& ply_file ) const{
     std::cout << "open bundler fail: " << ply_file << std::endl;
     return 0;
   }
-
   outfile << "ply"                            << std::endl;
   outfile << "format ascii 1.0"               << std::endl;
   outfile << "element vertex " << mNumbPoints << std::endl;
@@ -204,7 +200,6 @@ bool PARSE_BUNDLER::ConvertPly( const std::string& ply_file ) const{
   outfile << "property uchar diffuse_green"   << std::endl;
   outfile << "property uchar diffuse_bule"    << std::endl;
   outfile << "end_header"                     << std::endl;
-
   for (const auto& point_info : mFeature_infos ){
     outfile << point_info.mPoint.x << " "
       << point_info.mPoint.y << " "
@@ -214,7 +209,6 @@ bool PARSE_BUNDLER::ConvertPly( const std::string& ply_file ) const{
       << (int)point_info.mPoint.b << " "
       << std::endl;
   }
-
   return 1;
 }*/
 
@@ -365,9 +359,13 @@ void PARSE_BUNDLER::FindQueryPicture(const std::string& s)
 }
 
 // write query image into query bundler
-// write point mode: 0, without point; 1, point referred in db index; 2, point referred in query index
+// write point mode: 
+//                  0, without point; 
+//                  1, point referred in db index; 
+//                  2, point referred in query index;
+//                  
 // mode =2 , means it is independent bundle.out file with small partition of original images
-void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, int iWritePointMode ) const
+void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWritePointMode, bool bWithPointIndex ) const
 {
   std::map<size_t, size_t> mapImgOrginToQuery;
   //std::map<size_t, size_t> mapImgOrginToDB;
@@ -427,16 +425,17 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, int iWritePointMode
   std::cout << "num of db points: " << cntPointsInDB << std::endl;
   std::cout << "num of query points: " << cntPointsInQuery << std::endl;
 
-  ofstream os( s, std::ios::out | std::ios::trunc );
+  ofstream os( sBundleQuery, std::ios::out | std::ios::trunc );
   if ( false == os.is_open() ){
-    std::cout << " open query bundle file fail: " << s << endl;
+    std::cout << " open query bundle file fail: " << sBundleQuery << endl;
     return;
   }
 
   const auto & mCameras = mAll_pic_cameras.GetAllCameras();
 
   os << "# Bundle file v0.3" << endl;
-  size_t cntPoint = iWritePointMode == 0 ? 0 : ( iWritePointMode == 1 ? cntPointsInDB : cntPointsInQuery );
+  size_t numPoint[3] = { 0, cntPointsInDB, cntPointsInQuery };
+  size_t cntPoint = numPoint[iWritePointMode];
   os << cntImgQuery << " " << cntPoint << endl;
   os << std::resetiosflags( std::ios::fixed )
     << std::setiosflags( std::ios::scientific )
@@ -497,17 +496,27 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, int iWritePointMode
         << mFeature_infos[i].mPoint.z << std::endl
         << (int)mFeature_infos[i].mPoint.r << " "
         << (int)mFeature_infos[i].mPoint.g << " "
-        << (int)mFeature_infos[i].mPoint.b << std::endl
-        << view_lenth_true << " ";
+        << (int)mFeature_infos[i].mPoint.b;
+
+      //if write the index of 3d point
+      if ( bWithPointIndex && ( 1 == iWritePointMode ) )
+      {
+        os << " " << map3DPointsOrigToDB[i];
+      }
+      else if ( bWithPointIndex && ( 2 == iWritePointMode ) ){ 
+        os << " " << map3DPointsOrigToQuery[i];
+      }
+      os << std::endl << view_lenth_true << " ";
 
       for ( size_t j = 0; j < view_lenth; j++ )
       {
         os << std::resetiosflags( std::ios::scientific )
           << std::setiosflags( std::ios::fixed )
           << std::setprecision( 4 );
-        if ( true == mPic_query_mask[mFeature_infos[i].mView_list[j].camera] )
+        size_t cntCamera = mFeature_infos[i].mView_list[j].camera;
+        if ( true == mPic_query_mask[cntCamera] )
         {
-          const auto mapQuery_iter = mapImgOrginToQuery.find( mFeature_infos[i].mView_list[j].camera );
+          const auto mapQuery_iter = mapImgOrginToQuery.find( cntCamera );
           if ( mapQuery_iter != mapImgOrginToQuery.cend() )
           { 
             os << mapQuery_iter->second << " "
@@ -516,7 +525,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, int iWritePointMode
               << mFeature_infos[i].mView_list[j].y << " ";
           }
           else{
-            std::cout << " save view list error. parse_bundler.cpp line 516" << std::endl;
+            std::cout << " save view list error. parse_bundler.cpp line 528" << std::endl;
             return;
           }
         }
@@ -524,9 +533,20 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& s, int iWritePointMode
       os << std::endl;
     }
   }
- 
-
   os.close();
+
+  /* save the 3d point index map */
+  // then save the match information
+  std::ofstream ofs( sBundleQuery + ".points.map", std::ios::trunc );
+  if ( !ofs.is_open() ){
+    std::cout << "Open points.map fail: " << sBundleQuery + ".points.map" << std::endl;
+    return;
+  }
+  for ( auto iter = map3DPointsOrigToDB.cbegin(); iter != map3DPointsOrigToDB.cend(); ++iter )
+  {
+    ofs << iter->first << " " << iter->second << std::endl;
+  }
+
 }
 
 // write db image into db bundler

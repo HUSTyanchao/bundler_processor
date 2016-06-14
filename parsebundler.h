@@ -194,7 +194,7 @@ public:
 	// after load original bundler file, mark the query image
 	void FindQueryPicture(const std::string& s);
   void FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile ) const;
-  void WriteQueryBundler( const std::string& s, int iWritePointMode = 0) const;
+  void WriteQueryBundler( const std::string& sBundleQuery, int iWritePointMode = 0, bool bWithPointIndex = false ) const;
 
   void WriteDBBundler( const std::string& sBundleDB ) const;
 

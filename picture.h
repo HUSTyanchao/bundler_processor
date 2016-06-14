@@ -25,10 +25,10 @@ int CalculateSIFTDistanceSquared( const unsigned char* d1, const unsigned char* 
 */
 struct  BUNDLER_CAMERA
 {
-  cv::Matx33f	rotation;
-  cv::Vec3f	translation;
+  cv::Matx33d	rotation;
+  cv::Vec3d	translation;
 
-  float		focal_length;
+  double		focal_length;
   double		k1, k2;
 
   int			width, height;
