@@ -241,8 +241,8 @@ void PARSE_BUNDLER::DoStatPoints( const std::string& stat_res_file) const
       g.push_back( view.rgb[1] );
       b.push_back( view.rgb[2] );
     }
-    float rgb_mean[3];
-    float rgb_variance[3];
+    double rgb_mean[3];
+    double rgb_variance[3];
     rgb_mean[0] = std::accumulate( std::begin( r ), std::end( r ), 0.0 );
     rgb_mean[1] = std::accumulate( std::begin( g ), std::end( g ), 0.0 );
     rgb_mean[2] = std::accumulate( std::begin( b ), std::end( b ), 0.0 );
@@ -420,7 +420,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
     if( cntPointHaveQueryCames >=2 )
     { 
       bPointInQuery[i] = true; // this point will remain in query
-      map3DPointsOrigToDB[i] = cntPointsInQuery++;
+      map3DPointsOrigToQuery[i] = cntPointsInQuery++;
     }
   }
   std::cout << "num of db points: " << cntPointsInDB << std::endl;
