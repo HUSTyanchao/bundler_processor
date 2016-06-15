@@ -181,14 +181,16 @@ int main(int argc, char** argv)
     parse_bundller.WriteDBBundler( bundle_out + ".mydb" );
   }
   // extract bundle.query.out from bundle.orgi.out 
-  else if ( EXTRACT_BUNDLE_QUERY == eOperationmode ){ 
+  else if ( EXTRACT_BUNDLE_QUERY == eOperationmode )
+  { 
     std::cout << "operation mode: EXTRACT_BUNDLE_QUERY" << std::endl;
     std::string strListTxt( data_path + "/" + pic_list );
     parse_bundller.FindQueryPicture( strListTxt );
     parse_bundller.WriteQueryBundler( bundle_out + ".query.DBPointIndex" , 1, true);
   }
   // convert the bundle file to ply so we can visualize the 3d point cloud with MeshLab 
-  else if ( BUNDLE_TO_PLY == eOperationmode ){
+  else if ( BUNDLE_TO_PLY == eOperationmode )
+  {
     std::cout << "operation mode: BUNDLE_TO_PLY" << std::endl;
     parse_bundller.ConvertPly( ply_filename );
   }

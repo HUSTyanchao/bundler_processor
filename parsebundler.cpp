@@ -380,7 +380,12 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
     }
     // else{ mapImgOrginToDB[cntImage] = cntImgDB++; }
   }
-  std::cout << "num of query image: " << cntImgQuery  << std::endl;
+  if ( cntImgQuery == mapImgOrginToQuery.size() ){
+    std::cout << "num of query image: " << cntImgQuery << std::endl;
+  }
+  else{
+    std::cout << "num of query image diverge: parsebundler.cpp line 387" << std::endl;
+  }
   //std::cout << "num of DB image: "    << cntImgDB     << std::endl;
 
   // find 3d points remain in bundle.db.out and those only exist in query bundler
@@ -398,12 +403,10 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
     // find if this point should be remained in db
     for ( const auto& view : mFeature_infos[i].mView_list )
     {
-      if ( false == mPic_query_mask[view.camera] )
-      {
+      if ( false == mPic_query_mask[view.camera] ){
         ++cntPointHaveDBCams;
       }
-      else
-      {
+      else{
         ++cntPointHaveQueryCames;
       }
 
@@ -423,12 +426,24 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
       map3DPointsOrigToQuery[i] = cntPointsInQuery++;
     }
   }
-  std::cout << "num of db points: " << cntPointsInDB << std::endl;
-  std::cout << "num of query points: " << cntPointsInQuery << std::endl;
+
+  if ( cntPointsInDB == map3DPointsOrigToDB.size() ){
+    std::cout << "num of db points: " << cntPointsInDB << std::endl;
+  }
+  else{ 
+    std::cout << "num of db points diverge: parsebundler.cpp line 435" << std::endl;
+  }
+
+  if ( cntPointsInQuery == map3DPointsOrigToQuery.size() ){
+    std::cout << "num of query points: " << cntPointsInQuery << std::endl;
+  }
+  else{
+    std::cout << "num of query points diverge: parsebundler.cpp line 443" << std::endl;
+  }
 
   std::ofstream os( sBundleQuery, std::ios::out | std::ios::trunc );
   if ( false == os.is_open() ){
-    std::cout << " open query bundle file fail: " << sBundleQuery << endl;
+    std::cout << " open query bundle file fail: " << sBundleQuery << std::endl;
     return;
   }
 
@@ -526,7 +541,7 @@ void PARSE_BUNDLER::WriteQueryBundler( const std::string& sBundleQuery, int iWri
               << mFeature_infos[i].mView_list[j].y << " ";
           }
           else{
-            std::cout << " save view list error. parse_bundler.cpp line 528" << std::endl;
+            std::cout << " save view list error. parse_bundler.cpp line 546" << std::endl;
             return;
           }
         }
@@ -565,7 +580,12 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
       mapImgOrginToDB[cntImage] = cntImgDB++;
     }
   }
-  std::cout << "num of db image: " << cntImgDB << std::endl;
+  if ( cntImgDB == mapImgOrginToDB.size() ){ 
+    std::cout << "num of db image: " << cntImgDB << std::endl;
+  }
+  else{ 
+    std::cout << "num of db image diverge: parsebundler.cpp line 589" << std::endl;
+  }
 
   // find 3d points remain in bundle.db.out
   size_t cntPointsInDB = 0;
@@ -591,7 +611,14 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
       map3DPointsOrigToDB[i] = cntPointsInDB++;
     }
   }
-  std::cout << "num of db points: " << cntPointsInDB << std::endl;
+
+  if ( cntPointsInDB == map3DPointsOrigToDB.size() ){
+    std::cout << "num of db points: " << cntPointsInDB << std::endl;
+  }
+  else{
+    std::cout << "num of db points diverge: parsebundler.cpp line 621" << std::endl;
+  }
+
 
   // then save the bundle.db file
   ofstream os( sBundleDB, std::ios::out | std::ios::trunc );
@@ -672,7 +699,7 @@ void PARSE_BUNDLER::WriteDBBundler( const std::string& sBundleDB ) const
               << mFeature_infos[i].mView_list[j].y << " ";
           }
           else{ 
-            std::cout << " save view list err. parse_bundler.cpp line 672" << std::endl;
+            std::cout << " save view list err. parse_bundler.cpp line 704" << std::endl;
             return;
           }
         }
@@ -712,9 +739,14 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
       mapImgOrginToQuery[cntImage] = cntImgQuery++;
     }
   }
-  std::cout << "num of query image: " << cntImgQuery << std::endl;
+  if ( cntImgQuery == mapImgOrginToQuery.size() ){
+    std::cout << "num of query image: " << cntImgQuery << std::endl;
+  }
+  else{
+    std::cout << "num of query image diverge: parsebundler.cpp line 748" << std::endl;
+  }
 
-  // find 3d points only see in query pictures
+  // find 3d points see in query pictures
   size_t cntPointsInDB = 0;
   std::map<size_t, size_t> map3DPointsOrigToDB;
   std::vector<std::vector<std::pair<size_t, size_t>>> vPairImgFeatTo3DPointMatch( cntImgQuery );
@@ -726,14 +758,13 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
     {
       if ( false == mPic_query_mask[view.camera] ){
         ++cntPointHaveDBCams;
-        if ( cntPointHaveDBCams >= 2 ) break;
       }
+      if ( cntPointHaveDBCams >= 2 ) break;
     }
     
     // build point index from original to db
     if ( cntPointHaveDBCams >= 2 )
     {
-      map3DPointsOrigToDB[i] = cntPointsInDB;
       size_t kCamQuery = 0;
       // build the query match
       for ( const auto& view : mFeature_infos[i].mView_list )
@@ -747,23 +778,29 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
             vPairImgFeatTo3DPointMatch[kCamQuery].push_back( std::make_pair( view.key, cntPointsInDB ) );
           }
           else{
-            std::cout << "map find error. parsebundler.cpp line 646" << std::endl;
+            std::cout << "map find error. parsebundler.cpp line 784" << std::endl;
           }
         }
       }
-      cntPointsInDB++;
+      map3DPointsOrigToDB[i] = cntPointsInDB++;
     }
   }
-  std::cout << "num of db points: " << cntPointsInDB << std::endl;
+  if ( cntPointsInDB == map3DPointsOrigToDB.size() ){
+    std::cout << "num of db points: " << cntPointsInDB << std::endl;
+  }
+  else{
+    std::cout << "num of db points diverge. parsebundler.cpp line 795" << std::endl;
+  }
 
   // then save the match information
   std::ofstream os( sTrueMatchFile, std::ios::trunc );
   if ( !os.is_open() ){
-    std::cout << "Open trueMatchFile fail: " << sTrueMatchFile << std::endl;
+    std::cout << "Open trueMatchFile fail: " << sTrueMatchFile 
+      <<" parsebundler.cpp line 799" << std::endl;
     return;
   }
   
-  // rank the match
+  // rank the matches and find the maxim of matches
   size_t kMaximMatches = 0;
   for ( size_t kImgQuery = 0; kImgQuery < cntImgQuery; kImgQuery++ )
   {
@@ -772,13 +809,13 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
     kMaximMatches = std::max( kMaximMatches, vImgFeatMatch.size() );
   }
 
-  // save the match 
-  size_t cntMatch= 0;
+  // save the matches 
+  size_t cntMatch = 0;
   for ( size_t kImgQuery = 0; kImgQuery < cntImgQuery; kImgQuery++ )
   {
     const auto & vImgFeatMatch = vPairImgFeatTo3DPointMatch[kImgQuery];
    
-    // first line: img_id, feature_id1,...,feature_idn
+    // first line: img_id, feature_id1, ..., feature_idn
     cntMatch = 0;
     os << kImgQuery << " ";
     for ( const auto& feat_match : vImgFeatMatch )
@@ -807,6 +844,7 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
     os << std::endl; 
   }
   os.close();
+
   //size_t kDBPoint = vPairImgFeatTo3DPointMatch[1][0].second;
   //for ( auto mapMember : map3DPointsOrigToDB ){
   //  if ( mapMember.second == kDBPoint ){
@@ -819,7 +857,7 @@ void PARSE_BUNDLER::FindQueryFeatureTrueMatch( const std::string& sTrueMatchFile
 
   /* save the 3d point index map */
   // then save the match information
-  std::ofstream ofs( sTrueMatchFile+".points.map", std::ios::trunc );
+  std::ofstream ofs( sTrueMatchFile + ".points.map", std::ios::trunc );
   if ( !ofs.is_open() ){
     std::cout << "Open points.map fail: " << sTrueMatchFile + ".points.map" << std::endl;
     return;
